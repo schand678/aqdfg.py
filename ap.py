@@ -12,8 +12,8 @@ st.set_page_config(
 st.title("🚘 Vehicle Recommendation System")
 st.markdown("""
 Welcome to the **Vehicle Recommendation System**! 
-This app helps recommend the best vehicles based on user input and categorizes them as **new** or **used**.
-Upload your dataset, input your preferences, and explore tailored recommendations.
+This app recommends the best vehicles based on user input. Even if no exact matches are found, 
+we’ll provide fallback recommendations to ensure you always get results.
 """)
 
 # Sidebar for navigation
@@ -29,7 +29,7 @@ def load_data(file):
 # Recommendation function
 @st.cache_data
 def recommend_by_cluster_price_and_mileage(input_make, input_price, input_mileage, df, cluster_column='Cluster', price_tolerance=2000, mileage_tolerance=5000, top_n=5):
-    """Recommend vehicles efficiently with caching."""
+    """Recommend vehicles efficiently."""
     input_cluster = df[df['make'] == input_make][cluster_column].iloc[0]
     cluster_data = df[df[cluster_column] == input_cluster]
     price_lower_bound = input_price - price_tolerance
@@ -62,45 +62,50 @@ if uploaded_file is not None:
 
     # Check if necessary columns are present
     if {'make', 'price', 'Cluster', 'mileage', 'stock_type'}.issubset(df.columns):
-        # Stock Type selection
-        st.sidebar.header("🎯 Select Vehicle Type")
-        stock_type = st.sidebar.radio(
-            "Choose car type for recommendations:",
-            options=['New', 'Used'],
-            help="Choose whether to recommend new or used vehicles."
-        )
+        # Input Section
+        st.sidebar.header("📊 Input Parameters")
+        input_make = st.sidebar.selectbox("Select Vehicle Make", df['make'].unique())
+        input_price = st.sidebar.number_input("Enter Vehicle Price ($)", min_value=0, value=20000, step=1000)
+        input_mileage = st.sidebar.number_input("Enter Vehicle Mileage (km)", min_value=0, value=50000, step=1000)
+        price_tolerance = st.sidebar.slider("Price Tolerance ($)", min_value=500, max_value=10000, value=2000, step=500)
+        mileage_tolerance = st.sidebar.slider("Mileage Tolerance (km)", min_value=1000, max_value=20000, value=5000, step=1000)
+        top_n = st.sidebar.slider("Number of Recommendations", min_value=1, max_value=20, value=5)
 
-        filtered_data = df[df['stock_type'].str.lower() == stock_type.lower()]
-        if filtered_data.empty:
-            st.warning(f"⚠️ No data found for {stock_type} vehicles. Please check your dataset.")
-        else:
-            st.sidebar.header("📊 Input Parameters")
+        # Get Recommendations
+        if st.sidebar.button("💡 Get Recommendations"):
+            recommendations = recommend_by_cluster_price_and_mileage(
+                input_make, input_price, input_mileage, df,
+                cluster_column='Cluster', price_tolerance=price_tolerance,
+                mileage_tolerance=mileage_tolerance, top_n=top_n
+            )
 
-            # Input Section
-            input_make = st.sidebar.selectbox("Select Vehicle Make", filtered_data['make'].unique())
-            input_price = st.sidebar.number_input("Enter Vehicle Price ($)", min_value=0, value=5000, step=100)
-            input_mileage = st.sidebar.number_input("Enter Vehicle Mileage (km)", min_value=0, value=50000, step=1000)
-            price_tolerance = st.sidebar.slider("Price Tolerance ($)", min_value=500, max_value=10000, value=2000, step=500)
-            mileage_tolerance = st.sidebar.slider("Mileage Tolerance (km)", min_value=1000, max_value=20000, value=5000, step=1000)
-            top_n = st.sidebar.slider("Number of Recommendations", min_value=1, max_value=20, value=5)
+            # Check recommendations
+            if recommendations.empty:
+                st.warning("No exact matches found. Expanding search criteria...")
 
-            # Get Recommendations
-            if st.sidebar.button("💡 Get Recommendations"):
-                recommendations = recommend_by_cluster_price_and_mileage(
-                    input_make, input_price, input_mileage, filtered_data,
-                    cluster_column='Cluster', price_tolerance=price_tolerance,
-                    mileage_tolerance=mileage_tolerance, top_n=top_n
-                )
+                # 1. Loosen tolerances
+                expanded_recommendations = df[
+                    (df['price'] >= input_price - 2 * price_tolerance) &
+                    (df['price'] <= input_price + 2 * price_tolerance) &
+                    (df['mileage'] >= input_mileage - 2 * mileage_tolerance) &
+                    (df['mileage'] <= input_mileage + 2 * mileage_tolerance)
+                ].sort_values(by='combined_difference').head(top_n)
 
-                # Recommendations Section
-                st.subheader(f"📋 Recommendations ({stock_type} Cars)")
-                if not recommendations.empty:
-                    st.markdown(f"### Recommendations for `{input_make}` near price `${input_price}` and mileage `{input_mileage}`:")
-                    st.dataframe(recommendations, use_container_width=True)
+                if not expanded_recommendations.empty:
+                    st.success("Here are matches with expanded tolerances:")
+                    st.dataframe(expanded_recommendations)
                 else:
-                    st.warning("⚠️ No recommendations found within the specified range. Try adjusting the tolerances.")
+                    # 2. Fallback: Show top cars from the dataset
+                    st.warning("Still no matches found. Showing general recommendations:")
+                    fallback_recommendations = df.sort_values(by=['price', 'mileage']).head(top_n)
+                    st.dataframe(fallback_recommendations)
+            else:
+                # Show strict recommendations
+                st.subheader("📋 Recommendations (Strict Criteria)")
+                st.markdown(f"### Recommendations for `{input_make}` near price `${input_price}` and mileage `{input_mileage}`:")
+                st.dataframe(recommendations)
     else:
-        st.error("⚠️ The dataset must contain 'make', 'price', 'Cluster', 'mileage', and 'stock_type' columns.")
+        st.error("⚠️ The dataset must contain the columns: 'make', 'price', 'Cluster', 'mileage', and 'stock_type'.")
 else:
     st.warning("📥 Upload a CSV file to start!")
 
