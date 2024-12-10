@@ -12,8 +12,8 @@ st.set_page_config(
 st.title("🚘 Vehicle Recommendation System")
 st.markdown("""
 Welcome to the **Vehicle Recommendation System**! 
-This app provides insights and recommendations based on **active** or **sold** vehicle data.
-Select your preference, upload your dataset, and explore recommendations tailored to your input.
+This app helps recommend the best vehicles based on user input and categorizes them as **new** or **used**.
+Upload your dataset, input your preferences, and explore tailored recommendations.
 """)
 
 # Sidebar for navigation
@@ -61,18 +61,18 @@ if uploaded_file is not None:
     st.dataframe(df.head(), use_container_width=True)
 
     # Check if necessary columns are present
-    if {'make', 'price', 'Cluster', 'mileage', 'listing_type'}.issubset(df.columns):
-        # Listing Type selection
-        st.sidebar.header("🎯 Select Vehicle Listing Type")
-        listing_type = st.sidebar.radio(
-            "Choose data for recommendations:",
-            options=['Active', 'Sold'],
-            help="Choose whether to recommend vehicles based on active or sold data."
+    if {'make', 'price', 'Cluster', 'mileage', 'stock_type'}.issubset(df.columns):
+        # Stock Type selection
+        st.sidebar.header("🎯 Select Vehicle Type")
+        stock_type = st.sidebar.radio(
+            "Choose car type for recommendations:",
+            options=['New', 'Used'],
+            help="Choose whether to recommend new or used vehicles."
         )
 
-        filtered_data = df[df['listing_type'].str.lower() == listing_type.lower()]
+        filtered_data = df[df['stock_type'].str.lower() == stock_type.lower()]
         if filtered_data.empty:
-            st.warning(f"⚠️ No data found for {listing_type} vehicles. Please check your dataset.")
+            st.warning(f"⚠️ No data found for {stock_type} vehicles. Please check your dataset.")
         else:
             st.sidebar.header("📊 Input Parameters")
 
@@ -93,14 +93,14 @@ if uploaded_file is not None:
                 )
 
                 # Recommendations Section
-                st.subheader(f"📋 Recommendations ({listing_type} Cars)")
+                st.subheader(f"📋 Recommendations ({stock_type} Cars)")
                 if not recommendations.empty:
                     st.markdown(f"### Recommendations for `{input_make}` near price `${input_price}` and mileage `{input_mileage}`:")
                     st.dataframe(recommendations, use_container_width=True)
                 else:
                     st.warning("⚠️ No recommendations found within the specified range. Try adjusting the tolerances.")
     else:
-        st.error("⚠️ The dataset must contain 'make', 'price', 'Cluster', 'mileage', and 'listing_type' columns.")
+        st.error("⚠️ The dataset must contain 'make', 'price', 'Cluster', 'mileage', and 'stock_type' columns.")
 else:
     st.warning("📥 Upload a CSV file to start!")
 
@@ -110,5 +110,4 @@ st.markdown("""
 #### Developed for better vehicle insights and smarter recommendations.
 This app is powered by **Streamlit** and designed for better decision-making in the automotive industry. 🚀
 """)
-
 
