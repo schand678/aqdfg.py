@@ -73,7 +73,7 @@ def recommend_by_cluster_price_and_mileage(input_make, input_price, input_mileag
     recommendations = cluster_data[
         (cluster_data['price'] >= price_lower_bound) & 
         (cluster_data['price'] <= price_upper_bound) &
-        (cluster_data['mileage'] >= mileage_lower_bound) & 
+        (cluster_data['mileage'] >= mileage_lower_bound) &  
         (cluster_data['mileage'] <= mileage_upper_bound)
     ]
 
