@@ -9,15 +9,15 @@ st.set_page_config(
 )
 
 # Main Title
-st.title("🚗 Vehicle Make Recommendation System")
+st.title("🔎 Vehicle Recommendation System")
 st.markdown("""
-This project leverages data science to provide insights and recommendations on vehicle sales.
-Upload your dataset, input your preferences, and get personalized recommendations.
+Welcome to the **Vehicle Recommendation System**! 
+This application uses clustering and analytics to recommend the most suitable vehicles based on your preferences.
 """)
 
 # Sidebar for navigation
-st.sidebar.header("🔍 Navigation")
-st.sidebar.info("Use the sections below to interact with the app.")
+st.sidebar.header("🔧 Controls")
+st.sidebar.info("Use the controls below to interact with the application.")
 
 # Load data function
 @st.cache_data
@@ -53,14 +53,14 @@ st.sidebar.header("📤 Upload Data")
 uploaded_file = st.sidebar.file_uploader("Upload your CSV file", type="csv")
 
 if uploaded_file is not None:
-    st.sidebar.success("File uploaded successfully!")
+    st.sidebar.success("📂 File uploaded successfully!")
     df2 = load_data(uploaded_file)
 
     st.write("### Dataset Preview")
     st.dataframe(df2.head(), use_container_width=True)
 
     if {'make', 'price', 'Cluster', 'mileage'}.issubset(df2.columns):
-        st.sidebar.header("📊 Input Parameters")
+        st.sidebar.header("🎯 Input Parameters")
         
         # Input Section
         input_make = st.sidebar.selectbox("Select Vehicle Make", df2['make'].unique())
@@ -71,7 +71,7 @@ if uploaded_file is not None:
         top_n = st.sidebar.slider("Number of Recommendations", min_value=1, max_value=20, value=5)
 
         # Get Recommendations
-        if st.sidebar.button("🔍 Get Recommendations"):
+        if st.sidebar.button("💡 Get Recommendations"):
             recommendations = recommend_by_cluster_price_and_mileage(
                 input_make, input_price, input_mileage, df2,
                 cluster_column='Cluster', price_tolerance=price_tolerance,
@@ -79,16 +79,24 @@ if uploaded_file is not None:
             )
 
             # Recommendations Section
-            st.subheader("🔽 Recommendations")
+            st.subheader("📋 Recommendations")
             if not recommendations.empty:
                 st.markdown(f"### Recommendations for `{input_make}` near price `${input_price}` and mileage `{input_mileage}`:")
                 st.dataframe(recommendations, use_container_width=True)
             else:
-                st.warning("No recommendations found within the specified range. Try adjusting the tolerances.")
+                st.warning("⚠️ No recommendations found within the specified range. Try adjusting the tolerances.")
     else:
-        st.error("The dataset must contain 'make', 'price', 'Cluster', and 'mileage' columns.")
+        st.error("⚠️ The dataset must contain 'make', 'price', 'Cluster', and 'mileage' columns.")
 else:
-    st.warning("Upload a CSV file to start!")
+    st.warning("📥 Upload a CSV file to start!")
+
+# Footer Section
+st.markdown("---")
+st.markdown("""
+#### Developed for better vehicle insights and smarter recommendations.
+This app is powered by **Streamlit** and built for innovation in the automotive industry. 🚀
+""")
+
 
 # Footer Section
 st.markdown("---")
