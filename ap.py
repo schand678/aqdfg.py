@@ -83,21 +83,34 @@ if uploaded_file is not None:
             if recommendations.empty:
                 st.warning("No exact matches found. Expanding search criteria...")
 
-                # 1. Loosen tolerances
+                # Step 1: Loosen tolerances
                 expanded_recommendations = df[
                     (df['price'] >= input_price - 2 * price_tolerance) &
                     (df['price'] <= input_price + 2 * price_tolerance) &
                     (df['mileage'] >= input_mileage - 2 * mileage_tolerance) &
                     (df['mileage'] <= input_mileage + 2 * mileage_tolerance)
-                ].sort_values(by='combined_difference').head(top_n)
+                ]
 
+                # Step 2: Compute 'combined_difference' for expanded dataset
                 if not expanded_recommendations.empty:
+                    expanded_recommendations['combined_difference'] = (
+                        abs(expanded_recommendations['price'] - input_price) +
+                        abs(expanded_recommendations['mileage'] - input_mileage)
+                    )
+                    expanded_recommendations = expanded_recommendations.sort_values(by='combined_difference').head(top_n)
                     st.success("Here are matches with expanded tolerances:")
                     st.dataframe(expanded_recommendations)
                 else:
-                    # 2. Fallback: Show top cars from the dataset
+                    # Step 3: Fallback - Show top cars from the dataset
                     st.warning("Still no matches found. Showing general recommendations:")
-                    fallback_recommendations = df.sort_values(by=['price', 'mileage']).head(top_n)
+                    fallback_recommendations = df.copy()
+
+                    # Calculate 'combined_difference' for the full dataset
+                    fallback_recommendations['combined_difference'] = (
+                        abs(fallback_recommendations['price'] - input_price) +
+                        abs(fallback_recommendations['mileage'] - input_mileage)
+                    )
+                    fallback_recommendations = fallback_recommendations.sort_values(by='combined_difference').head(top_n)
                     st.dataframe(fallback_recommendations)
             else:
                 # Show strict recommendations
@@ -115,4 +128,3 @@ st.markdown("""
 #### Developed for better vehicle insights and smarter recommendations.
 This app is powered by **Streamlit** and designed for better decision-making in the automotive industry. 🚀
 """)
-
