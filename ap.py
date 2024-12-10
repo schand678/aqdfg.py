@@ -12,7 +12,7 @@ st.set_page_config(
 st.title("🚘 Vehicle Recommendation System")
 st.markdown("""
 Welcome to the **Vehicle Recommendation System**! 
-This app provides insights and recommendations based on **active** or **sold** vehicle data. 
+This app provides insights and recommendations based on **active** or **sold** vehicle data.
 Select your preference, upload your dataset, and explore recommendations tailored to your input.
 """)
 
@@ -61,18 +61,18 @@ if uploaded_file is not None:
     st.dataframe(df.head(), use_container_width=True)
 
     # Check if necessary columns are present
-    if {'make', 'price', 'Cluster', 'mileage', 'status'}.issubset(df.columns):
-        # Status selection
-        st.sidebar.header("🎯 Select Vehicle Status")
-        vehicle_status = st.sidebar.radio(
+    if {'make', 'price', 'Cluster', 'mileage', 'listing_type'}.issubset(df.columns):
+        # Listing Type selection
+        st.sidebar.header("🎯 Select Vehicle Listing Type")
+        listing_type = st.sidebar.radio(
             "Choose data for recommendations:",
             options=['Active', 'Sold'],
             help="Choose whether to recommend vehicles based on active or sold data."
         )
 
-        filtered_data = df[df['status'] == vehicle_status.lower()]
+        filtered_data = df[df['listing_type'].str.lower() == listing_type.lower()]
         if filtered_data.empty:
-            st.warning(f"⚠️ No data found for {vehicle_status} vehicles. Please check your dataset.")
+            st.warning(f"⚠️ No data found for {listing_type} vehicles. Please check your dataset.")
         else:
             st.sidebar.header("📊 Input Parameters")
 
@@ -93,14 +93,14 @@ if uploaded_file is not None:
                 )
 
                 # Recommendations Section
-                st.subheader(f"📋 Recommendations ({vehicle_status} Cars)")
+                st.subheader(f"📋 Recommendations ({listing_type} Cars)")
                 if not recommendations.empty:
                     st.markdown(f"### Recommendations for `{input_make}` near price `${input_price}` and mileage `{input_mileage}`:")
                     st.dataframe(recommendations, use_container_width=True)
                 else:
                     st.warning("⚠️ No recommendations found within the specified range. Try adjusting the tolerances.")
     else:
-        st.error("⚠️ The dataset must contain 'make', 'price', 'Cluster', 'mileage', and 'status' columns.")
+        st.error("⚠️ The dataset must contain 'make', 'price', 'Cluster', 'mileage', and 'listing_type' columns.")
 else:
     st.warning("📥 Upload a CSV file to start!")
 
