@@ -1,17 +1,4 @@
-import streamlit as st
-import pandas as pd
 
-# File uploader for CSV
-uploaded_file = st.file_uploader("Upload your CSV file", type="csv")
-
-if uploaded_file is not None:
-    # Read the CSV file into a DataFrame
-    df = pd.read_csv(uploaded_file)
-    st.success("File uploaded successfully!")
-    st.write("### Preview of Uploaded Data")
-    st.dataframe(df.head())  # Show the first 5 rows of the dataset
-else:
-    st.warning("Please upload a CSV file to see visualizations.")
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
